@@ -22,6 +22,7 @@ from .tabs.dataset_tab import DataSetTab
 from .tabs.control_tab import ControlTab
 from .tabs.report_tab import ReportTab
 from .tabs.file_tab import FileTab
+from .tabs.ai_tab import AiTab
 
 APP_TITLE = "IEC 61850 客户端工具 (v1.6.1)"
 
@@ -90,11 +91,13 @@ class App(tb.Window):
         self.tab_control = ControlTab(self)
         self.tab_report = ReportTab(self)
         self.tab_file = FileTab(self)
+        self.tab_ai = AiTab(self)
         self.notebook.add(self.tab_data, text=" 📂 数据浏览 ")
         self.notebook.add(self.tab_dataset, text=" 📋 数据集 ")
         self.notebook.add(self.tab_control, text=" 🎛 控制操作 ")
         self.notebook.add(self.tab_report, text=" 📡 报告订阅 ")
         self.notebook.add(self.tab_file, text=" 🗃 文件服务 ")
+        self.notebook.add(self.tab_ai, text=" 🤖 AI 助手 ")
 
         bottom = tb.Frame(self, padding=(14, 6, 14, 10))
         bottom.pack(fill="x")
