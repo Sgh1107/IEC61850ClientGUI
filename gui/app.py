@@ -33,6 +33,10 @@ class App(tb.Window):
         self.title(APP_TITLE)
         self.geometry("1080x720")
         self.minsize(900, 560)
+        try:
+            self.state("zoomed")   # Windows 默认最大化启动
+        except Exception:  # noqa: BLE001
+            pass
 
         self.client = None
         self.busy = False
@@ -185,6 +189,7 @@ class App(tb.Window):
         self.style.theme_use(theme)
         self.btn_theme.set_text("☀日间模式" if self._dark else "🌙夜间模式")
         self._sync_round_btn_bg()
+        self._notify_tabs("on_theme_changed")
         self.set_status("已切换到%s" % ("夜间模式" if self._dark else "日间模式"))
 
     def _header_bg(self):

@@ -102,6 +102,9 @@ class ToolDispatcher(object):
     def dispatch(self, name, args):
         """执行工具，返回 (结果文本, 是否成功)"""
         c = self.client
+        if c is None or not c.connected:
+            return ("当前未连接 IED 服务器。请提示用户：先在主界面左上角输入服务器 IP "
+                    "并点击“连接”，然后重试该操作。"), False
         try:
             if name == "list_model":
                 out = self._run(c.get_all_data_objects)
