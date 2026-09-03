@@ -23,29 +23,27 @@ class ReportTab(tb.Frame):
         self.rowconfigure(2, weight=1)
 
         # ---------- 扫描/选择 RCB ----------
-        scan = tb.Labelframe(self, text=" 1. 发现报告控制块(RCB) ", padding=8)
+        scan = tb.Labelframe(self, text=" 1. 选择报告控制块(RCB)（连接后自动扫描） ", padding=8)
         scan.grid(row=0, column=0, sticky="ew")
         scan.columnconfigure(1, weight=1)
 
-        tb.Label(scan, text="逻辑节点引用 (如 simpleIOGenericIO/GGIO1):").grid(row=0, column=0, sticky="w")
-        self.ln_var = tk.StringVar(value="simpleIOGenericIO/GGIO1")
-        tb.Entry(scan, textvariable=self.ln_var).grid(row=1, column=0, sticky="ew", pady=(2, 6))
-        self.btn_scan = tb.Button(scan, text="🔍 扫描 RCB", bootstyle=PRIMARY, command=self.on_scan)
+        tb.Label(scan, text="RCB 引用:").grid(row=0, column=0, sticky="w")
+        self.ref_var = tk.StringVar(value="")
+        self.ref_combo = tb.Combobox(scan, textvariable=self.ref_var, width=52)
+        self.ref_combo.grid(row=1, column=0, sticky="ew", pady=(2, 6))
+        self.btn_scan = tb.Button(scan, text="⟳ 重新扫描", bootstyle=SECONDARY + "-outline",
+                                  command=self.load_model)
         self.btn_scan.grid(row=1, column=1, padx=(8, 0), pady=(2, 6))
 
-        tb.Label(scan, text="发现的 RCB:").grid(row=2, column=0, sticky="w")
-        self.rcb_list = tk.Listbox(scan, height=5, font=("Consolas", 10),
-                                   exportselection=False)
-        self.rcb_list.grid(row=3, column=0, sticky="ew")
-        self.rcb_list.bind("<<ListboxSelect>>", lambda _e: self._update_sub_btn())
-
         btn_col = tb.Frame(scan)
-        btn_col.grid(row=3, column=1, sticky="n", padx=(8, 0))
-        self.btn_sub = tb.Button(btn_col, text="📡 订阅", bootstyle=SUCCESS, command=self.on_subscribe)
-        self.btn_sub.pack(fill="x")
-        self.btn_unsub = tb.Button(btn_col, text="取消选中订阅", bootstyle=SECONDARY + "-outline",
+        btn_col.grid(row=2, column=0, sticky="w", pady=(2, 0))
+        self.btn_sub = tb.Button(btn_col, text="📡 订阅", bootstyle=SUCCESS,
+                                 command=self.on_subscribe)
+        self.btn_sub.pack(side="left", padx=(0, 8))
+        self.btn_unsub = tb.Button(btn_col, text="取消所有订阅",
+                                   bootstyle=SECONDARY + "-outline",
                                    command=self.on_unsubscribe)
-        self.btn_unsub.pack(fill="x", pady=(4, 0))
+        self.btn_unsub.pack(side="left")
 
         # ---------- 订阅参数 ----------
         opt = tb.Labelframe(self, text=" 2. 订阅参数（触发条件） ", padding=8)
@@ -96,9 +94,29 @@ class ReportTab(tb.Frame):
     def on_connected(self):
         self.on_state_change()
 
+    def load_model(self, done=None):
+        """扫描全部 RCB 引用填充下拉框（app 链式调用）"""
+        if not self.app.connected():
+            if done:
+                done()
+            return
+        client = self.app.client
+
+        def work():
+            return client.get_all_rcbs()
+
+        def ok(rcbs):
+            self.ref_combo.configure(values=rcbs)
+            if rcbs:
+                self.ref_var.set(rcbs[0])
+            self.app.set_status("发现 %d 个 RCB" % len(rcbs) if rcbs else "未发现 RCB")
+            if done:
+                done()
+
+        self.app.run_async(work, ok=ok, done_msg="已扫描 RCB 列表")
+
     def on_disconnecting(self):
         self._unsubscribe_all()
-        self.rcb_list.delete(0, "end")
 
     def on_state_change(self):
         state = "normal" if self.app.connected() else "disabled"
@@ -106,39 +124,17 @@ class ReportTab(tb.Frame):
         self._update_sub_btn()
 
     def _update_sub_btn(self):
-        has_sel = bool(self.rcb_list.curselection())
-        self.btn_sub.configure(state="normal" if (self.app.connected() and has_sel) else "disabled")
+        has_ref = bool(self.ref_var.get().strip())
+        self.btn_sub.configure(state="normal" if (self.app.connected() and has_ref) else "disabled")
         self.btn_unsub.configure(state="normal" if self.subscriptions else "disabled")
         self.btn_gi.configure(state="normal" if self.subscriptions else "disabled")
 
-    # ---- 扫描 ----
-    def on_scan(self):
-        ln = self.ln_var.get().strip()
-        if not ln:
-            self.app.set_status("请输入逻辑节点引用", is_error=True)
-            return
-        client = self.app.client
-
-        def work():
-            rcbs = []
-            rcbs += client.get_rcbs(ln, buffered=False)
-            rcbs += client.get_rcbs(ln, buffered=True)
-            return rcbs
-
-        def ok(rcbs):
-            self.rcb_list.delete(0, "end")
-            for r in rcbs:
-                self.rcb_list.insert("end", r)
-            self.app.set_status("发现 %d 个 RCB" % len(rcbs) if rcbs else "未发现 RCB")
-
-        self.app.run_async(work, ok=ok, done_msg="扫描完成")
-
     # ---- 订阅 ----
     def on_subscribe(self):
-        sel = self.rcb_list.curselection()
-        if not sel:
+        rcb_ref = self.ref_var.get().strip()
+        if not rcb_ref:
+            self.app.set_status("请先选择 RCB 引用", is_error=True)
             return
-        rcb_ref = self.rcb_list.get(sel[0])
         client = self.app.client
 
         def work():

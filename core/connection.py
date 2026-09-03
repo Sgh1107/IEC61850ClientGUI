@@ -128,6 +128,38 @@ class Client(object):
             raise MmsError(self.err.value)
         return ["%s.%s" % (ln_ref, n) for n in self._str_list(head)]
 
+    # ---------------- 全模型枚举（供 GUI 下拉框填充） ----------------
+    def get_logical_node_refs(self):
+        """返回所有 LN 引用列表 ['LD/LN', ...]"""
+        out = []
+        for ld in self.get_logical_devices():
+            for ln in self.get_logical_nodes(ld):
+                out.append("%s/%s" % (ld, ln))
+        return out
+
+    def get_all_datasets(self):
+        """返回服务器上全部数据集引用"""
+        out = []
+        for ln in self.get_logical_node_refs():
+            out += self.get_data_sets(ln)
+        return out
+
+    def get_all_rcbs(self):
+        """返回服务器上全部 RCB 引用（URCB + BRCB）"""
+        out = []
+        for ln in self.get_logical_node_refs():
+            out += self.get_rcbs(ln, False)
+            out += self.get_rcbs(ln, True)
+        return out
+
+    def get_all_data_objects(self):
+        """返回服务器上全部数据对象引用 ['LD/LN.DO', ...]"""
+        out = []
+        for ln in self.get_logical_node_refs():
+            for do in self.get_data_objects(ln):
+                out.append("%s.%s" % (ln, do))
+        return out
+
     # ---------------- 读 / 写 ----------------
     def read(self, ref, fc):
         """读数据属性，返回 Python 值。

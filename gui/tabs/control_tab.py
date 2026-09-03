@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""控制操作标签页。"""
+"""控制操作标签页"""
 import tkinter as tk
 
 import ttkbootstrap as tb
@@ -23,8 +23,9 @@ class ControlTab(tb.Frame):
         panel.columnconfigure(1, weight=1)
 
         tb.Label(panel, text="控制对象引用:").grid(row=0, column=0, sticky="w", pady=3)
-        self.ref_var = tk.StringVar(value="simpleIOGenericIO/GGIO1.SPCSO1")
-        tb.Entry(panel, textvariable=self.ref_var).grid(row=0, column=1, sticky="ew", pady=3)
+        self.ref_var = tk.StringVar(value="")
+        self.ref_combo = tb.Combobox(panel, textvariable=self.ref_var, width=44)
+        self.ref_combo.grid(row=0, column=1, sticky="ew", pady=3)
 
         tb.Label(panel, text="控制值:").grid(row=1, column=0, sticky="w", pady=3)
         val_row = tb.Frame(panel)
@@ -78,6 +79,28 @@ class ControlTab(tb.Frame):
     # ------------------------------------------------------------------
     def on_connected(self):
         self.on_state_change()
+
+    def load_model(self, done=None):
+        """扫描全部数据对象引用填充下拉框（app 链式调用）"""
+        if not self.app.connected():
+            if done:
+                done()
+            return
+        client = self.app.client
+
+        def work():
+            return [r for r in client.get_all_data_objects()]
+
+        def ok(refs):
+            self.ref_combo.configure(values=refs)
+            if refs:
+                self.ref_var.set(refs[0])
+            self.app.set_status("发现 %d 个数据对象" % len(refs) if refs
+                                else "未发现数据对象")
+            if done:
+                done()
+
+        self.app.run_async(work, ok=ok, done_msg="已扫描数据对象列表")
 
     def on_disconnecting(self):
         pass

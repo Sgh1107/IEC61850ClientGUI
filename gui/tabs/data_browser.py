@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-"""数据模型浏览 + 读/写标签页（重新设计版）。
-
+﻿# -*- coding: utf-8 -*-
+"""
+数据模型浏览 + 读/写标签页（重新设计版）。
 布局：
     ┌─────────── 模型树 ───────────┐ ┌──── 详情面板 ────┐
     │ 服务器 → LD → LN → DO → DA  │ │ 引用 + FC        │
@@ -145,15 +145,16 @@ class DataBrowserTab(tb.Frame):
     # ------------------------------------------------------------------
     # 生命周期回调
     # ------------------------------------------------------------------
-    def on_connected(self):
-        self.on_state_change()
-        self.on_connected_load()
-
-    def on_connected_load(self):
+    def load_model(self, done=None):
+        """连接后扫描逻辑设备填充模型树（app 链式调用）"""
         if not self.app.connected():
+            if done:
+                done()
             return
-        self.app.run_async(lambda: self.app.client.get_logical_devices(),
-                           ok=self._fill_roots, done_msg="已读取逻辑设备列表")
+        self.app.run_async(
+            lambda: self.app.client.get_logical_devices(),
+            ok=lambda lds: (self._fill_roots(lds), done and done()),
+            done_msg="已读取逻辑设备列表")
 
     def _fill_roots(self, lds):
         for iid in self.tree.get_children(""):
@@ -179,7 +180,7 @@ class DataBrowserTab(tb.Frame):
     def _reload(self):
         for iid in self.tree.get_children(""):
             self.tree.delete(iid)
-        self.on_connected_load()
+        self.load_model()
 
     def _on_open_node(self, _e):
         iid = self.tree.focus()

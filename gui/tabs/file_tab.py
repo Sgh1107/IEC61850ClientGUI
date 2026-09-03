@@ -84,6 +84,7 @@ class FileTab(tb.Frame):
 
         self.tree.bind("<Double-1>", self.on_double_click)
         self.tree.bind("<Return>", self.on_double_click)
+        self.tree.bind("<<TreeviewSelect>>", lambda _e: self.on_state_change())
 
         # ---------- 操作栏 ----------
         act = tb.Frame(self)

@@ -6,11 +6,11 @@
 
 | 标签页 | 功能 | 对应示例 |
 | --- | --- | --- |
-| 📂 数据浏览 | 树形浏览服务器模型（LD→LN→DO→DA 懒加载），读/写任意数据属性 | client_example1、example_array |
+| 📂 数据浏览 | 树形浏览服务器模型（LD→LN→DO→DA 懒加载），"选中即读"、大字值显示、读值历史、智能写值 | client_example1、example_array |
 | 📋 数据集 | 读取数据集成员及实时值，支持单成员/整组写值 | client_example4 |
 | 🎛 控制操作 | 直控 / SBO（先选择后操作）、操作来源、联锁/同期校验、操作日志 | client_example_control |
 | 📡 报告订阅 | 扫描 RCB（BRCB/URCB）、订阅报告、总召(GI)、实时事件表格 | client_example_reporting |
-| 🗃 文件服务 | 浏览服务器文件（双击进子目录）、下载、上传、删除 | file-tool |
+| 🗃 文件服务 | 浏览服务器文件、下载、上传、删除 | file-tool |
 
 ## 运行
 
@@ -45,7 +45,7 @@ IEC61850ClientGUI/
 │   └── files.py           # MMS 文件服务（列目录/下载/上传/删除）
 ├── gui/                   # ttkbootstrap 界面层
 │   ├── app.py             # 主窗口 + 连接管理 + 线程调度
-│   └── tabs/              # 四个功能标签页（互不依赖，均只依赖 app 接口）
+│   └── tabs/              # 五个功能标签页（互不依赖，均只依赖 app 接口）
 └── main.py                # 入口
 ```
 

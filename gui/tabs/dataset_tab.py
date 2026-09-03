@@ -26,8 +26,9 @@ class DataSetTab(tb.Frame):
         top = tb.Frame(self)
         top.grid(row=0, column=0, sticky="ew", pady=(0, 6))
         tb.Label(top, text="数据集引用:").pack(side="left")
-        self.ref_var = tk.StringVar(value="simpleIOGenericIO/LLN0.Events")
-        tb.Entry(top, textvariable=self.ref_var).pack(side="left", fill="x", expand=True, padx=6)
+        self.ref_var = tk.StringVar(value="")
+        self.ref_combo = tb.Combobox(top, textvariable=self.ref_var, width=46)
+        self.ref_combo.pack(side="left", fill="x", expand=True, padx=6)
         self.btn_read = tb.Button(top, text="📖 读取数据集", bootstyle=PRIMARY, command=self.on_read)
         self.btn_read.pack(side="left")
 
@@ -69,6 +70,23 @@ class DataSetTab(tb.Frame):
     # ------------------------------------------------------------------
     def on_connected(self):
         self.on_state_change()
+
+    def load_model(self, done=None):
+        """扫描全模型数据集引用填充下拉框（app 链式调用）"""
+        if not self.app.connected():
+            if done:
+                done()
+            return
+        client = self.app.client
+        self.app.run_async(lambda: client.get_all_datasets(),
+                           ok=lambda refs: (self._fill_refs(refs), done and done()),
+                           done_msg="已扫描数据集列表")
+
+    def _fill_refs(self, refs):
+        self.ref_combo.configure(values=refs)
+        if refs:
+            self.ref_var.set(refs[0])
+        self.app.set_status("发现 %d 个数据集" % len(refs) if refs else "未发现数据集")
 
     def on_disconnecting(self):
         self.members, self.values = [], []

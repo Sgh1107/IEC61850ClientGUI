@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-"""IEC 61850 客户端 GUI 工具 —— 入口
-
+"""
+IEC 61850 客户端 GUI 工具 —— 入口
 用法:
     python main.py [服务器IP] [端口]
-
 依赖:
     pip install ttkbootstrap
 """
