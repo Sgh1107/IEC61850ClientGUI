@@ -129,12 +129,12 @@ class DataBrowserTab(tb.Frame):
         cols = ("time", "ref", "value")
         self.history = tb.Treeview(hist, columns=cols, show="headings",
                                    bootstyle=PRIMARY, height=7)
-        self.history.heading("time", text="时间")
-        self.history.heading("ref", text="引用")
-        self.history.heading("value", text="值")
-        self.history.column("time", width=80, anchor="center", stretch=False)
-        self.history.column("ref", width=210)
-        self.history.column("value", width=150)
+        self.history.heading("time", text="时间", anchor="w")
+        self.history.heading("ref", text="引用", anchor="w")
+        self.history.heading("value", text="值", anchor="w")
+        self.history.column("time", width=170, anchor="w", stretch=False)
+        self.history.column("ref", width=230)
+        self.history.column("value", width=230)
         hvsb = tb.Scrollbar(hist, orient="vertical", command=self.history.yview,
                             bootstyle="round")
         self.history.configure(yscrollcommand=hvsb.set)

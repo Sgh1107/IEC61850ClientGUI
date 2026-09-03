@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """数据集查看/写值标签页。"""
 import tkinter as tk
 
@@ -44,9 +44,9 @@ class DataSetTab(tb.Frame):
         frame.rowconfigure(0, weight=1)
         self.table = tb.Treeview(frame, columns=cols, show="headings", bootstyle=PRIMARY)
         self.table.heading("idx", text="#")
-        self.table.heading("ref", text="成员引用")
-        self.table.heading("value", text="当前值")
-        self.table.column("idx", width=40, anchor="e", stretch=False)
+        self.table.heading("ref", text="成员引用", anchor="w")
+        self.table.heading("value", text="当前值", anchor="w")
+        self.table.column("idx", width=40, anchor="w", stretch=False)
         self.table.column("ref", width=380)
         self.table.column("value", width=220)
         vsb = tb.Scrollbar(frame, orient="vertical", command=self.table.yview, bootstyle="round")
@@ -80,6 +80,7 @@ class DataSetTab(tb.Frame):
         client = self.app.client
         self.app.run_async(lambda: client.get_all_datasets(),
                            ok=lambda refs: (self._fill_refs(refs), done and done()),
+                           err=lambda _e: done and done(),
                            done_msg="已扫描数据集列表")
 
     def _fill_refs(self, refs):

@@ -61,10 +61,10 @@ class App(tb.Window):
         tb.Entry(header, textvariable=self.port_var, width=6).pack(side="left", padx=(4, 10))
 
         self.btn_connect = RoundButton(header, text="连 接", command=self.on_conn_toggle,
-                                       bg="#2e8c5a", hover="#3caa6e", width=100)
+                                       bg="#2e8c5a", hover="#3caa6e", width=130)
         self.btn_connect.pack(side="left", padx=(12, 6))
-        self.btn_theme = RoundButton(header, text="夜间模式", command=self.on_toggle_theme,
-                                     bg="#5b6472", hover="#6d7889", width=96,
+        self.btn_theme = RoundButton(header, text="🌙夜间模式", command=self.on_toggle_theme,
+                                     bg="#5b6472", hover="#6d7889", width=160,
                                      font=("Microsoft YaHei UI", 10))
         self.btn_theme.pack(side="left")
 
@@ -180,7 +180,7 @@ class App(tb.Window):
         self._dark = not self._dark
         theme = "darkly" if self._dark else "flatly"
         self.style.theme_use(theme)
-        self.btn_theme.set_text("日间模式" if self._dark else "夜间模式")
+        self.btn_theme.set_text("☀日间模式" if self._dark else "🌙夜间模式")
         self._sync_round_btn_bg()
         self.set_status("已切换到%s" % ("夜间模式" if self._dark else "日间模式"))
 

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """MMS 文件服务标签页（浏览/下载/上传/删除）。"""
 import os
 import time
@@ -72,9 +72,9 @@ class FileTab(tb.Frame):
         self.tree.heading("#0", text="名称", anchor="w")
         self.tree.heading("size", text="大小", anchor="e")
         self.tree.heading("mtime", text="修改时间", anchor="w")
-        self.tree.column("#0", width=380, minwidth=180)
-        self.tree.column("size", width=110, anchor="e", stretch=False)
-        self.tree.column("mtime", width=170, anchor="w", stretch=False)
+        self.tree.column("#0", width=200, minwidth=200)
+        self.tree.column("size", width=200, anchor="e", stretch=False)
+        self.tree.column("mtime", width=500, anchor="w", stretch=False)
         self.tree.tag_configure("dir", font=("Microsoft YaHei UI", 10, "bold"))
 
         vsb = tb.Scrollbar(frame, orient="vertical", command=self.tree.yview, bootstyle="round")

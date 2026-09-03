@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """控制操作标签页"""
 import tkinter as tk
 
@@ -100,7 +100,9 @@ class ControlTab(tb.Frame):
             if done:
                 done()
 
-        self.app.run_async(work, ok=ok, done_msg="已扫描数据对象列表")
+        self.app.run_async(work, ok=ok,
+                           err=lambda _e: done and done(),
+                           done_msg="已扫描数据对象列表")
 
     def on_disconnecting(self):
         pass

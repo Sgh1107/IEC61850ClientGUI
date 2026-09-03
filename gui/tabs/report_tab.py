@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """报告(RCB)订阅标签页。"""
 import time
 import tkinter as tk
@@ -74,19 +74,17 @@ class ReportTab(tb.Frame):
         evf.rowconfigure(0, weight=1)
         cols = ("time", "seq", "reasons", "value")
         self.events = tb.Treeview(evf, columns=cols, show="headings", bootstyle=PRIMARY)
-        self.events.heading("time", text="时间")
-        self.events.heading("seq", text="序号")
-        self.events.heading("reasons", text="原因")
-        self.events.heading("value", text="数据值")
-        self.events.column("time", width=140, stretch=False)
-        self.events.column("seq", width=50, anchor="e", stretch=False)
-        self.events.column("reasons", width=230)
-        self.events.column("value", width=380)
+        self.events.heading("time", text="时间", anchor="w")
+        self.events.heading("seq", text="序号", anchor="w")
+        self.events.heading("reasons", text="原因", anchor="w")
+        self.events.heading("value", text="数据值", anchor="w")
+        self.events.column("time", width=260, minwidth=260, anchor="w", stretch=False)
+        self.events.column("seq", width=110, minwidth=110, anchor="w", stretch=False)
+        self.events.column("reasons", width=500, minwidth=400, anchor="w", stretch=False)
+        self.events.column("value", width=1000, minwidth=700, anchor="w", stretch=True)
         vsb = tb.Scrollbar(evf, orient="vertical", command=self.events.yview, bootstyle="round")
         self.events.configure(yscrollcommand=vsb.set)
         self.events.grid(row=0, column=0, sticky="nsew")
-        vsb.grid(row=0, column=0, sticky="ns", padx=(0, 0))
-        # scrollbar 放在右侧需要 grid 到 column=1
         vsb.grid(row=0, column=1, sticky="ns")
 
     
@@ -110,10 +108,13 @@ class ReportTab(tb.Frame):
             if rcbs:
                 self.ref_var.set(rcbs[0])
             self.app.set_status("发现 %d 个 RCB" % len(rcbs) if rcbs else "未发现 RCB")
+            self._update_sub_btn()
             if done:
                 done()
 
-        self.app.run_async(work, ok=ok, done_msg="已扫描 RCB 列表")
+        self.app.run_async(work, ok=ok,
+                           err=lambda _e: done and done(),
+                           done_msg="已扫描 RCB 列表")
 
     def on_disconnecting(self):
         self._unsubscribe_all()
