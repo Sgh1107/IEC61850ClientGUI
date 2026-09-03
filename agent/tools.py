@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Agent 工具层：把 core/ 的 IEC 61850 客户端能力包装为 LLM 可调用的工具。
-
+"""
+Agent 工具层：把 core/ 的 IEC 61850 客户端能力包装为 LLM 可调用的工具
 安全设计：
 - operate_control 是唯一危险操作，dispatch 前必须经 confirm 回调人工确认
 - read/write 前用模型缓存校验引用是否存在，防止 LLM 幻觉编造引用

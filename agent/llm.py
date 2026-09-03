@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""LLM 客户端：OpenAI 兼容 Chat Completions（urllib 实现，无第三方依赖）。
-
-支持任意 OpenAI 兼容端点：OpenAI / DeepSeek / 通义 / Ollama / vLLM 等。
+"""
+LLM 客户端：OpenAI 兼容 Chat Completions（urllib 实现，无第三方依赖）
+支持任意 OpenAI 兼容端点：OpenAI / DeepSeek / 通义 / Ollama / vLLM 等
 """
 import json
 import urllib.request
@@ -20,9 +20,9 @@ class LLMClient(object):
         self.timeout = timeout
 
     def chat(self, messages, tools=None):
-        """调用 chat/completions，返回 assistant 消息 dict。
-
-        支持工具调用：返回的消息可能包含 tool_calls。
+        """
+        调用 chat/completions，返回 assistant 消息 dict
+        支持工具调用：返回的消息可能包含 tool_calls
         """
         url = self.base_url + "/chat/completions"
         body = {"model": self.model, "messages": messages}
@@ -47,3 +47,23 @@ class LLMClient(object):
             return data["choices"][0]["message"]
         except (KeyError, IndexError):
             raise LLMError("LLM 响应格式异常：%s" % json.dumps(data)[:300])
+
+    def list_models(self):
+        """GET /models，返回模型 id 列表（OpenAI 兼容接口通用）"""
+        url = self.base_url + "/models"
+        req = urllib.request.Request(
+            url, headers={"Authorization": "Bearer " + (self.api_key or "none")})
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode("utf-8", "replace")[:300]
+            raise LLMError("获取模型列表 HTTP %s：%s" % (e.code, detail))
+        except urllib.error.URLError as e:
+            raise LLMError("无法连接 LLM 服务：%s" % e.reason)
+        except json.JSONDecodeError:
+            raise LLMError("模型列表响应不是有效 JSON")
+        models = sorted(m.get("id", "") for m in data.get("data", []) if m.get("id"))
+        if not models:
+            raise LLMError("服务端未返回任何模型（可能不支持 /models 接口）")
+        return models

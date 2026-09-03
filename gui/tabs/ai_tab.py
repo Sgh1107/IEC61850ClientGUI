@@ -50,12 +50,16 @@ class AiTab(tb.Frame):
         tb.Entry(cfg, textvariable=self.key_var, show="*").grid(row=1, column=1, sticky="ew", padx=6)
 
         tb.Label(cfg, text="模型:").grid(row=2, column=0, sticky="w")
-        self.model_var = tk.StringVar(value="deepseek-chat")
-        tb.Entry(cfg, textvariable=self.model_var, width=24).grid(row=2, column=1,
-                                                                  sticky="w", padx=6)
+        self.model_var = tk.StringVar(value="")
+        self.model_combo = tb.Combobox(cfg, textvariable=self.model_var, width=28)
+        self.model_combo.grid(row=2, column=1, sticky="w", padx=6)
+        self.btn_fetch_models = tb.Button(cfg, text="⟳ 获取模型",
+                                          bootstyle=SECONDARY + "-outline",
+                                          command=self.on_fetch_models)
+        self.btn_fetch_models.grid(row=2, column=2, padx=6)
         self.btn_clear = tb.Button(cfg, text="清空对话", bootstyle=SECONDARY + "-outline",
                                    command=self.on_clear, state="disabled")
-        self.btn_clear.grid(row=2, column=2, padx=6)
+        self.btn_clear.grid(row=2, column=3, padx=(6, 0))
 
         # ---------- 对话记录 ----------
         chatf = tb.Labelframe(self, text=" 对话（工具调用过程会同步显示） ", padding=6)
@@ -88,6 +92,41 @@ class AiTab(tb.Frame):
         self.btn_send.grid(row=0, column=1)
 
         self.after(100, self._poll_queue)
+
+    def on_fetch_models(self):
+        """从 LLM 服务端拉取可用模型列表填充下拉框（工作线程执行）"""
+        url = self.url_var.get().strip()
+        if not url:
+            messagebox.showinfo("提示", "请先填写接口地址", parent=self)
+            return
+        self.btn_fetch_models.configure(state="disabled")
+        self.app.set_status("AI助手：正在获取模型列表…")
+        llm = LLMClient(url, self.key_var.get().strip(), self.model_var.get().strip())
+
+        def worker():
+            try:
+                models = llm.list_models()
+                self.after(0, lambda: self._fill_models(models))
+            except LLMError as e:
+                self.after(0, lambda: self._models_failed(str(e)))
+            except Exception as e:  # noqa: BLE001
+                self.after(0, lambda: self._models_failed(str(e)))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _fill_models(self, models):
+        current = self.model_var.get().strip()
+        self.model_combo.configure(values=models)
+        if current in models:
+            self.model_var.set(current)
+        else:
+            self.model_var.set(models[0])
+        self.btn_fetch_models.configure(state="normal")
+        self.app.set_status("获取到 %d 个可用模型" % len(models))
+
+    def _models_failed(self, msg):
+        self.btn_fetch_models.configure(state="normal")
+        self.app.set_status("获取模型失败：%s" % msg, is_error=True)
 
     # ------------------------------------------------------------------
     # 设置持久化
