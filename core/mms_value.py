@@ -23,7 +23,7 @@ TYPE_NAMES = {
 
 
 def mms_value_to_python(ptr):
-    """把 MmsValue* 转为 Python 值（递归处理结构体/数组）。"""
+    """把 MmsValue* 转为 Python 值（递归处理结构体/数组）"""
     if not ptr:
         return None
     L = _lib()

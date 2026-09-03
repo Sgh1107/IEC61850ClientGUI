@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
-"""ctypes FFI 层：加载 libiec61850 动态库并声明所有用到函数的签名。
-
+"""
+ctypes FFI 层：加载 libiec61850 动态库并声明所有用到函数的签名
 本模块只负责"绑定"，不含任何业务逻辑。
 """
 import ctypes
@@ -222,8 +222,7 @@ def _bind_functions(L):
     L.ClientReportControlBlock_setTrgOps.argtypes = [P, I]
     L.ClientReportControlBlock_setIntgPd.argtypes = [P, ctypes.c_uint32]
     L.ClientReportControlBlock_setGI.argtypes = [P, I]
-    for fn, rt in (("ClientReportControlBlock_getRptId", CH),
-                   ("ClientReportControlBlock_getDataSetReference", CH)):
+    for fn, rt in (("ClientReportControlBlock_getRptId", CH), ("ClientReportControlBlock_getDataSetReference", CH)):
         getattr(L, fn).argtypes = [P]
         getattr(L, fn).restype = rt
     for fn in ("ClientReportControlBlock_getRptEna",
@@ -231,8 +230,7 @@ def _bind_functions(L):
                "ClientReportControlBlock_isBuffered"):
         getattr(L, fn).argtypes = [P]
         getattr(L, fn).restype = I
-    for fn in ("ClientReportControlBlock_getIntgPd",
-               "ClientReportControlBlock_getConfRev"):
+    for fn in ("ClientReportControlBlock_getIntgPd", "ClientReportControlBlock_getConfRev"):
         getattr(L, fn).argtypes = [P]
         getattr(L, fn).restype = ctypes.c_uint32
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""控制操作封装（直控 / SBO 选择-执行）。"""
+"""控制操作封装（直控 / SBO 选择-执行）"""
 import ctypes
 
 from .connection import MmsError

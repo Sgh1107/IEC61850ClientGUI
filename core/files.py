@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""MMS 文件服务封装（作用于已有 Client 连接）。
-
+"""
+MMS 文件服务封装（作用于已有 Client 连接）
 参考 examples/iec61850_client_example_files/file-tool.c 与 MMSFileUI 的实现。
 """
 import ctypes
@@ -153,7 +153,6 @@ def delete(client, remote_filename):
     L = client._lib
     _bind(L)
     err = c_int(0)
-    L.IedConnection_deleteFile(client.con, byref(err),
-                               remote_filename.encode("utf-8"))
+    L.IedConnection_deleteFile(client.con, byref(err), remote_filename.encode("utf-8"))
     if err.value != ffi.IED_ERROR_OK:
         raise MmsError(err.value)

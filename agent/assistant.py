@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Agent 会话：LLM 对话 + 工具调用循环。
-
+"""
+Agent 会话：LLM 对话 + 工具调用循环
 用法（在后台线程中调用）：
     session = AgentSession(llm, dispatcher)
     session.on_tool = lambda name, args, result: ...   # 工具调用通知

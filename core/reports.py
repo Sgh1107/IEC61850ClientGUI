@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
-"""报告(RCB)订阅封装。
-
+"""
+报告(RCB)订阅封装
 用法：
     sub = ReportSubscription(client, rcb_ref, rpt_id, callback)
     sub.enable(trg_ops=..., intg_pd=...)   # 启用报告

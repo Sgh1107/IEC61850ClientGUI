@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-"""数据集服务封装。"""
+"""数据集服务封装"""
 import ctypes
 
 from . import ffi
@@ -15,11 +15,9 @@ class DataSet(object):
         self.ref = ref
         self.err = ctypes.c_int(0)
         L = client._lib
-        self._ds = L.IedConnection_readDataSetValues(
-            client.con, ctypes.byref(self.err), ref.encode("utf-8"), None)
+        self._ds = L.IedConnection_readDataSetValues(client.con, ctypes.byref(self.err), ref.encode("utf-8"), None)
         if self.err.value != ffi.IED_ERROR_OK or not self._ds:
-            raise MmsError(self.err.value or 128,
-                                  "读取数据集失败：%s" % ffi.err_str(self.err.value or 128))
+            raise MmsError(self.err.value or 128, "读取数据集失败：%s" % ffi.err_str(self.err.value or 128))
 
     @property
     def values(self):
@@ -80,8 +78,7 @@ def write_values(client, ds_ref, values):
             mv = python_to_mms_value(v)
             mvs.append(mv)
             L.LinkedList_add(head, mv)
-        L.IedConnection_writeDataSetValues(
-            client.con, ctypes.byref(err), ds_ref.encode("utf-8"), head, None)
+        L.IedConnection_writeDataSetValues(client.con, ctypes.byref(err), ds_ref.encode("utf-8"), head, None)
     finally:
         for mv in mvs:
             L.MmsValue_delete(mv)
