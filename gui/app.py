@@ -15,6 +15,7 @@ import ttkbootstrap as tb
 from ttkbootstrap.constants import PRIMARY, SECONDARY, DANGER
 
 from core.connection import Client
+from core.model_store import ModelStore
 
 from .widgets import RoundButton
 from .tabs.data_browser import DataBrowserTab
@@ -22,6 +23,8 @@ from .tabs.dataset_tab import DataSetTab
 from .tabs.control_tab import ControlTab
 from .tabs.report_tab import ReportTab
 from .tabs.file_tab import FileTab
+from .tabs.mapping_tab import MappingTab
+from .tabs.ai_tab import AiTab
 
 APP_TITLE = "IEC 61850 客户端工具 (v1.6.1)"
 
@@ -34,6 +37,7 @@ class App(tb.Window):
         self.minsize(900, 560)
 
         self.client = None
+        self.model_store = ModelStore()   # 点表映射本地持久化（data/point_map.db）
         self.busy = False
         self.ui_queue = queue.Queue()
 
@@ -90,11 +94,15 @@ class App(tb.Window):
         self.tab_control = ControlTab(self)
         self.tab_report = ReportTab(self)
         self.tab_file = FileTab(self)
+        self.tab_mapping = MappingTab(self)
+        self.tab_ai = AiTab(self)
         self.notebook.add(self.tab_data, text=" 📂 数据浏览 ")
         self.notebook.add(self.tab_dataset, text=" 📋 数据集 ")
         self.notebook.add(self.tab_control, text=" 🎛 控制操作 ")
         self.notebook.add(self.tab_report, text=" 📡 报告订阅 ")
         self.notebook.add(self.tab_file, text=" 🗃 文件服务 ")
+        self.notebook.add(self.tab_mapping, text=" 🗺 点表映射 ")
+        self.notebook.add(self.tab_ai, text=" 🤖 AI 助手 ")
 
         bottom = tb.Frame(self, padding=(14, 6, 14, 10))
         bottom.pack(fill="x")
@@ -220,14 +228,20 @@ class App(tb.Window):
         def ok(client):
             self.client = client
             self._notify_tabs("on_state_change")
-            # 顺序扫描各页所需的服务器模型（同一连接不能并发 MMS 请求）
-            chain = [self.tab_data, self.tab_dataset, self.tab_control, self.tab_report]
+            # 顺序扫描各页所需的服务器模型（同一连接不能并发 MMS 请求），
+            # 最后把全模型快照写入本地点表映射库
+            chain = [self.tab_data, self.tab_dataset, self.tab_control,
+                     self.tab_report, self._sync_model_store]
 
             def run_chain(i=0):
                 if i < len(chain):
-                    tab = chain[i]
+                    step = chain[i]
                     try:
-                        tab.load_model(done=lambda: run_chain(i + 1))
+                        # Tab 页对象走 load_model(done)；普通函数直接调用
+                        if hasattr(step, "load_model"):
+                            step.load_model(done=lambda: run_chain(i + 1))
+                        else:
+                            step(done=lambda: run_chain(i + 1))
                     except Exception as e:  # noqa: BLE001
                         import traceback
                         traceback.print_exc()
@@ -246,6 +260,48 @@ class App(tb.Window):
         self.set_status("已断开")
         self._update_connection_ui()
         self._notify_tabs("on_state_change")
+
+    # ------------------------------------------------------------------
+    # 点表映射同步（连接后模型快照 + 规则语义 -> data/point_map.db）
+    # ------------------------------------------------------------------
+    def _server_id(self):
+        return "%s:%s" % (self.host_var.get().strip(),
+                          self.port_var.get().strip() or "102")
+
+    def _sync_model_store(self, done=None):
+        """连接后把服务器全模型写入本地映射库并应用规则（链式调用的一步）"""
+        if not self.connected():
+            if done:
+                done()
+            return
+        sid = self._server_id()
+        store = self.model_store
+        cli = self.client
+
+        def work():
+            n = store.scan_model(cli, server_id=sid)
+            cnt = store.apply_rules(server_id=sid)
+            return n, cnt
+
+        def ok(res):
+            n, cnt = res
+            self.set_status("点表映射已同步：%d 个数据对象入库（%s），规则生成 %d 条语义"
+                            % (n, sid, cnt))
+            # 点表映射页自动刷新
+            if hasattr(self, "tab_mapping"):
+                try:
+                    self.tab_mapping.refresh_points()
+                except Exception:  # noqa: BLE001
+                    pass
+            if done:
+                done()
+
+        def fail(_e):
+            self.set_status("点表映射同步失败，已跳过", is_error=True)
+            if done:
+                done()
+
+        self.run_async(work, ok=ok, err=fail)
 
     def _notify_tabs(self, method):
         for tab in self.notebook.tabs():

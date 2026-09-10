@@ -79,8 +79,14 @@ class DataBrowserTab(tb.Frame):
         tb.Label(info, textvariable=self.ref_var, font=("Consolas", 11, "bold"),
                  wraplength=400, bootstyle=PRIMARY, anchor="w").grid(row=0, column=0, sticky="ew")
 
+        # --- 语义映射（来自 data/point_map.db） ---
+        self.alias_var = tk.StringVar(value="（暂无映射）")
+        tb.Label(info, textvariable=self.alias_var, wraplength=400,
+                 bootstyle=SUCCESS, anchor="w").grid(row=1, column=0, sticky="ew",
+                                                     pady=(4, 0))
+
         fc_row = tb.Frame(info)
-        fc_row.grid(row=1, column=0, sticky="ew", pady=(6, 0))
+        fc_row.grid(row=2, column=0, sticky="ew", pady=(6, 0))
         tb.Label(fc_row, text="功能约束:").pack(side="left")
         self.fc_var = tk.StringVar(value="MX")
         self.fc_combo = tb.Combobox(fc_row, textvariable=self.fc_var, width=6,
@@ -218,6 +224,18 @@ class DataBrowserTab(tb.Frame):
             self.app.set_status("展开失败（可能为叶子节点）：%s" % e)
             self.tree.insert(iid, "end", text="· (叶子节点)")
 
+    def _update_alias(self, ref):
+        """从本地映射库取该点的语义映射显示在详情面板"""
+        try:
+            info = self.app.model_store.lookup(ref)
+        except Exception:  # noqa: BLE001  数据库异常不影响浏览功能
+            return
+        sema = info.get("semantics")
+        parts = [info.get("alias"), info.get("category"),
+                 (sema or {}).get("description")]
+        parts = [p for p in parts if p]
+        self.alias_var.set("🏷 " + " ｜ ".join(parts) if parts else "（暂无映射）")
+
     def _on_select_node(self, _e):
         iid = self.tree.focus()
         if not iid:
@@ -226,6 +244,7 @@ class DataBrowserTab(tb.Frame):
         if len(vals) >= 2 and vals[1] == "da":
             self._current_ref = vals[0]
             self.ref_var.set(vals[0])
+            self._update_alias(vals[0])
             if len(vals) >= 3 and vals[2]:
                 self.fc_var.set(vals[2])
             if self.auto_read_var.get():
@@ -233,6 +252,7 @@ class DataBrowserTab(tb.Frame):
         elif len(vals) >= 2 and vals[1] == "do":
             self._current_ref = vals[0]
             self.ref_var.set(vals[0])
+            self._update_alias(vals[0])
 
     # ------------------------------------------------------------------
     # 读 / 写

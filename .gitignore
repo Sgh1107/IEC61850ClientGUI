@@ -1,1 +1,7 @@
+<<<<<<< HEAD
 __pycache__
+=======
+__pycache__
+ai_settings.json
+data
+>>>>>>> 3aed089 ([Feat] 新增数据映射功能)
